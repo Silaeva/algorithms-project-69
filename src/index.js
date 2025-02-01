@@ -1,27 +1,20 @@
-const buildInvertedIndex = (docs) => {
+const buildIndex = (docsArray) => {
   const index = {};
-  const docWordCounts = new Map();
+  const docFrequencies = {};
 
-  docs.forEach(({ id, text }) => {
-    const words = cleanText(text).split(" ");
-    docWordCounts.set(id, words.length);
-
+  docsArray.forEach(({ id, text }) => {
+    const words = new Set(cleanText(text).split(/\s+/));
     words.forEach((word) => {
       if (!index[word]) {
-        index[word] = { docIds: new Set(), frequencies: {}, idf: 0 };
+        index[word] = [];
+        docFrequencies[word] = 0;
       }
-      index[word].docIds.add(id);
-      index[word].frequencies[id] = (index[word].frequencies[id] || 0) + 1;
+      index[word].push(id);
+      docFrequencies[word] += 1;
     });
   });
 
-  const totalDocs = docs.length;
-  Object.keys(index).forEach((word) => {
-    const docCount = index[word].docIds.size;
-    index[word].idf = Math.log10(totalDocs / docCount);
-  });
-
-  return { index, docWordCounts };
+  return { index, docFrequencies, totalDocs: docsArray.length };
 };
 
 const cleanText = (text) =>
@@ -31,29 +24,37 @@ const cleanText = (text) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const computeTFIDF = (word, docWords, docFrequencies, totalDocs) => {
+  const tf = docWords.filter((w) => w === word).length / docWords.length;
+  const idf = Math.log((totalDocs + 1) / (docFrequencies[word] + 1)) + 1;
+  return tf * idf;
+};
+
 const search = (docsArray, searchString) => {
   if (!searchString.trim() || !Array.isArray(docsArray)) return [];
 
-  const { index, docWordCounts } = buildInvertedIndex(docsArray);
-  const searchWords = new Set(cleanText(searchString).split(" "));
-  const relevance = new Map();
+  const { index, docFrequencies, totalDocs } = buildIndex(docsArray);
+  const searchWords = new Set(cleanText(searchString).split(/\s+/));
+  const relevanceMap = {};
 
+  docsArray.forEach(({ id, text }) => {
+    const docWords = cleanText(text).split(/\s+/);
+    let score = 0;
 
-  searchWords.forEach((word) => {
-    if (index[word]) {
-      index[word].docIds.forEach((docId) => {
-        const tf = index[word].frequencies[docId] / docWordCounts.get(docId);
-        const tfIdf = tf * index[word].idf;
+    searchWords.forEach((word) => {
+      if (index[word]?.includes(id)) {
+        score += computeTFIDF(word, docWords, docFrequencies, totalDocs);
+      }
+    });
 
-        const score = (relevance.get(docId) || 0) + tfIdf;
-        relevance.set(docId, score);
-      });
+    if (score > 0) {
+      relevanceMap[id] = score;
     }
   });
 
-  return [...relevance.entries()]
-    .sort((a, b) => b[1] - a[1]) // Сортируем по TF-IDF
-    .map(([docId]) => docId);
+  return Object.entries(relevanceMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id]) => id);
 };
 
 export default search;
