@@ -1,3 +1,9 @@
+const cleanText = (text) => text
+  .replace(/[.,!?;:()"-]/g, ' ')
+  .toLowerCase()
+  .replace(/\s+/g, ' ')
+  .trim();
+
 const buildIndex = (docsArray) => {
   const index = {};
   const docFrequencies = {};
@@ -16,13 +22,6 @@ const buildIndex = (docsArray) => {
 
   return { index, docFrequencies, totalDocs: docsArray.length };
 };
-
-const cleanText = (text) =>
-  text
-    .replace(/[.,!?;:()"-]/g, " ")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
 
 const computeTFIDF = (word, docWords, docFrequencies, totalDocs) => {
   const tf = docWords.filter((w) => w === word).length / docWords.length;
