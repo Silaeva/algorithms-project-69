@@ -1,3 +1,20 @@
+const buildInvertedIndex = (docs) => {
+  const index = {};
+
+  docs.forEach(({ id, text }) => {
+    const words = cleanText(text).split(" ");
+    words.forEach((word) => {
+      if (!index[word]) {
+        index[word] = { docIds: new Set(), frequencies: {} };
+      }
+      index[word].docIds.add(id);
+      index[word].frequencies[id] = (index[word].frequencies[id] || 0) + 1;
+    });
+  });
+
+  return index;
+};
+
 const cleanText = (text) =>
   text
     .replace(/[.,!?;:()"-]/g, " ")
@@ -8,35 +25,30 @@ const cleanText = (text) =>
 const search = (docsArray, searchString) => {
   if (!searchString.trim() || !Array.isArray(docsArray)) return [];
 
-  const searchWords = new Set(cleanText(searchString).split(/\s+/));
+  const index = buildInvertedIndex(docsArray);
+  const searchWords = new Set(cleanText(searchString).split(" "));
+  const relevance = new Map();
 
-  return docsArray
-    .reduce((acc, doc) => {
-      const wordsInDoc = cleanText(doc.text).split(/\s+/);
-      let uniqueMatches = 0;
-      let totalMatches = 0;
+  searchWords.forEach((word) => {
+    if (index[word]) {
+      index[word].docIds.forEach((docId) => {
+        const uniqueMatches = (relevance.get(docId)?.uniqueMatches || 0) + 1;
+        const totalMatches =
+          (relevance.get(docId)?.totalMatches || 0) +
+          index[word].frequencies[docId];
 
-      searchWords.forEach((word) => {
-        const count = wordsInDoc.filter((w) => w === word).length;
-        if (count > 0) {
-          uniqueMatches += 1;
-          totalMatches += count;
-        }
+        relevance.set(docId, { uniqueMatches, totalMatches });
       });
-      if (uniqueMatches > 0) {
-        acc.push({
-          id: doc.id,
-          uniqueMatches,
-          totalMatches,
-        });
-      }
-      return acc;
-    }, [])
+    }
+  });
+
+  return [...relevance.entries()]
     .sort(
       (a, b) =>
-        b.uniqueMatches - a.uniqueMatches || b.totalMatches - a.totalMatches
+        b[1].uniqueMatches - a[1].uniqueMatches ||
+        b[1].totalMatches - a[1].totalMatches
     )
-    .map(({ id }) => id);
+    .map(([docId]) => docId);
 };
 
 export default search;

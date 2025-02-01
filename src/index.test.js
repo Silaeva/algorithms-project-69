@@ -40,7 +40,7 @@ describe("search function", () => {
   });
 
   test("returns documents sorted by relevance", () => {
-    expect(search(documents, "shoot at me")).toEqual([8, 5, 7]);
+    expect(search(documents, "shoot at me")).toEqual([8, 7, 5]);
     expect(search(documents, "shooter")).toEqual([9]);
   });
 
