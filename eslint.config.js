@@ -37,6 +37,7 @@ export default [
   {
     rules: {
       quotes: ["error", "double"],
+      "implicit-arrow-linebreak": off,
       "no-underscore-dangle": [
         "error",
         {

@@ -7,10 +7,11 @@ describe("search function", () => {
     { id: 3, text: "Unit tests are important" },
     { id: 4, text: "Hello again" },
     { id: 5, text: "Find-me if you can..." },
+    { id: 6, text: "Hello again and again" },
   ];
 
   test("finds documents containing the search string", () => {
-    expect(search(documents, "hello")).toEqual([1, 4]);
+    expect(search(documents, "hello")).toEqual([1, 4, 6]);
   });
 
   test("returns an empty array if no matches are found", () => {
@@ -34,8 +35,13 @@ describe("search function", () => {
   });
 
   test("ignores punctuation in documents and search queries", () => {
-    expect(search(documents, "Hello!")).toEqual([1, 4]);
+    expect(search(documents, "Hello!")).toEqual([1, 4, 6]);
     expect(search(documents, "unit tests")).toEqual([3]);
     expect(search(documents, "Find me?")).toEqual([5]);
+  });
+
+  test("returns documents sorted by relevance", () => {
+    expect(search(documents, "l")).toEqual([1, 4, 6]);
+    expect(search(documents, "again")).toEqual([6, 4]);
   });
 });
