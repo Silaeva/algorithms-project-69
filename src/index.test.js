@@ -1,9 +1,9 @@
 import search from './index.js';
 
 const docs = [
-  { id: 'doc1', text: "I can't shoot straight unless I've had a pint!" },
-  { id: 'doc2', text: "Don't shoot shoot shoot that thing at me." },
-  { id: 'doc3', text: "I'm your shooter." },
+  { id: 'doc1', text: 'I cant shoot straight unless Ive had a pint!' },
+  { id: 'doc2', text: 'Dont shoot shoot shoot that thing at me.' },
+  { id: 'doc3', text: 'Im your shooter.' },
   { id: 'doc4', text: 'Shooting and targeting are skills of a good shooter.' },
 ];
 
@@ -11,7 +11,7 @@ describe('search function', () => {
   test('Search finds relevant documents and sorts by TF-IDF', () => {
     expect(search(docs, 'shoot at me')).toEqual(['doc2', 'doc1']);
     expect(search(docs, 'shooter')).toEqual(['doc3', 'doc4']);
-    expect(search(docs, "can't straight")).toEqual(['doc1']);
+    expect(search(docs, 'cant straight')).toEqual(['doc1']);
   });
 
   test('Search is case-insensitive and ignores punctuation', () => {
